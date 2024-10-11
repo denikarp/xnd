@@ -23,8 +23,7 @@ from itertools import product
 
 wg = 0.6
 R = 50
-edge_offset = 20
-edge_taper_length = 300
+
 die_x = 5210
 die_y = 4870
  
