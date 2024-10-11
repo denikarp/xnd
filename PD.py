@@ -31,8 +31,22 @@ die_y = 4870
 nd.add_layer(name='x1', layer=(2,0), accuracy=0.005)
 nd.add_xsection('xs1')
 nd.add_layer2xsection(xsection='xs1', layer='x1')
-
 ic = Interconnect(xs='xs1', width=wg, radius=R)
+    
+
+
+def pad_gen(taper_width=20):
+    with nd.Cell('pad') as pad:
+      
+        pad_1_size = 75
+        pad_1 = nd.Polygon( points= geom.box(length=pad_1_size, width=pad_1_size), layer='p1r').put()
+        nd.Pin('d0').put(pad_1_size/2,-pad_1_size/2,270)
+    
+        nd.taper(length=20, width1=pad_1_size, width2=taper_width).put(pad.pin['d0'])
+        nd.Pin('d1').put(pad_1_size/2,-pad_1_size/2-20,270)
+        
+        nd.put_stub()
+    return pad
 
 
 with nd.Cell('background_cell') as background:
@@ -71,7 +85,7 @@ def backloop_gen(coupler_cell, pitch=250, lgth = 200):
     return bb
 
 
-def PD_gen(Ge_length=200, Ge_width=4):  
+def PD_gen(Ge_length=20, Ge_width=4):  
  
     with nd.Cell('PD_' + str(Ge_length) + "_" + str(Ge_width)) as bb:            
         # define xsection
@@ -92,10 +106,21 @@ def PD_gen(Ge_length=200, Ge_width=4):
         nd.add_layer2xsection(xsection=xsd, layer='ge_omic', accuracy=0.01, leftedge=(5, 6.0), rightedge=(5.0, 3.0))
         nd.add_layer2xsection(xsection=xsd, layer='ge_omic', accuracy=0.01, leftedge=(-5, -3.0), rightedge=(-5.0, -6.0))
         
-        nd.add_layer2xsection(xsection=xsd, layer='ge_pin', accuracy=0.01, leftedge=(10, 60.0), rightedge=(5.0, 2.0))
-        nd.add_layer2xsection(xsection=xsd, layer='ge_pin', accuracy=0.01, leftedge=(-5, -2.0), rightedge=(-5.0, -60.0))
+        # nd.add_layer2xsection(xsection=xsd, layer='ge_pin', accuracy=0.01, leftedge=(10, 60.0), rightedge=(5.0, 2.0))
+        # nd.add_layer2xsection(xsection=xsd, layer='ge_pin', accuracy=0.01, leftedge=(-5, -2.0), rightedge=(-5.0, -60.0))
              
-        nd.strt(length=100, width=wg, xs=xsd).put(0)       
+        nd.strt(length=Ge_length, width=wg, xs=xsd).put(0)
+        # Pads
+        cp = nd.cp.get_xy()
+        nd.cp.move(-Ge_length/2, Ge_width+wg/2, 90)
+        pad = pad_gen(Ge_length)
+        pad.put('d1')
+        
+        nd.cp.goto(*cp)
+        nd.cp.move(-Ge_length/2,-Ge_width-wg/2, 270)
+        pad.put('d1')
+        
+        
     return bb
 
 
@@ -123,7 +148,7 @@ with nd.Cell('TOP') as top:
     backloop_gen(coupler_cell, pitch=pitch).put()
     
     nd.cp.move(0,2*pitch)   
-    Ge_length = [200, 300]
+    Ge_length = [20, 30]
     Ge_width = [4, 5]
     permute = product(Ge_length, Ge_width)
     
