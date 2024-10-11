@@ -120,6 +120,8 @@ def PD_gen(Ge_length=20, Ge_width=4):
         nd.cp.move(-Ge_length/2,-Ge_width-wg/2, 270)
         pad.put('d1')
         
+        nd.cp.goto(*cp)
+        ic.taper(length=200, width2=0.2).put()
         
     return bb
 
